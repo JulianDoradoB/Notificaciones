@@ -15,7 +15,7 @@ public class CitaDTO {
     private String nombreMedico;
     private String especialidadMedico;
 
-    // Getters y Setters
+    
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

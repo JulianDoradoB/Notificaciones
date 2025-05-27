@@ -1,25 +1,32 @@
+// src/main/java/com/example/notificaciones/domain/dto/NotificacionDTO.java
 package com.example.notificaciones.domain.dto;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 public class NotificacionDTO {
 
     private Long id;
     private Long clienteId;
     private String tipo;
-    private String asunto;
+    private String asunto; // Correcto aquí
     private String mensaje;
-    private Timestamp fechaEnvio;
+    private LocalDateTime fechaEnvio;
     private String estado;
     private String canal;
     private String referenciaServicio;
     private String detallesAdicionales;
 
-    // Constructores (con y sin argumentos), getters y setters
+    private String emailDestinatario;
+
+
     public NotificacionDTO() {
+
     }
 
-    public NotificacionDTO(Long id, Long clienteId, String tipo, String asunto, String mensaje, Timestamp fechaEnvio, String estado, String canal, String referenciaServicio, String detallesAdicionales) {
+
+    public NotificacionDTO(Long id, Long clienteId, String tipo, String asunto, String mensaje,
+                           LocalDateTime fechaEnvio, String estado, String canal,
+                           String referenciaServicio, String detallesAdicionales, String emailDestinatario) {
         this.id = id;
         this.clienteId = clienteId;
         this.tipo = tipo;
@@ -30,7 +37,10 @@ public class NotificacionDTO {
         this.canal = canal;
         this.referenciaServicio = referenciaServicio;
         this.detallesAdicionales = detallesAdicionales;
+        this.emailDestinatario = emailDestinatario;
     }
+
+    // --- Getters y Setters ---
 
     public Long getId() {
         return id;
@@ -72,11 +82,11 @@ public class NotificacionDTO {
         this.mensaje = mensaje;
     }
 
-    public Timestamp getFechaEnvio() {
+    public LocalDateTime getFechaEnvio() {
         return fechaEnvio;
     }
 
-    public void setFechaEnvio(Timestamp fechaEnvio) {
+    public void setFechaEnvio(LocalDateTime fechaEnvio) {
         this.fechaEnvio = fechaEnvio;
     }
 
@@ -110,5 +120,30 @@ public class NotificacionDTO {
 
     public void setDetallesAdicionales(String detallesAdicionales) {
         this.detallesAdicionales = detallesAdicionales;
+    }
+
+    public String getEmailDestinatario() {
+        return emailDestinatario;
+    }
+
+    public void setEmailDestinatario(String emailDestinatario) {
+        this.emailDestinatario = emailDestinatario;
+    }
+
+    @Override
+    public String toString() {
+        return "NotificacionDTO{" +
+                "id=" + id +
+                ", clienteId=" + clienteId +
+                ", tipo='" + tipo + '\'' +
+                ", asunto='" + asunto + '\'' + // <-- ¡CORREGIDO! ahora dice "asunto" y tiene la coma inicial
+                ", mensaje='" + mensaje + '\'' +
+                ", fechaEnvio=" + fechaEnvio +
+                ", estado='" + estado + '\'' +
+                ", canal='" + canal + '\'' +
+                ", referenciaServicio='" + referenciaServicio + '\'' +
+                ", detallesAdicionales='" + detallesAdicionales + '\'' +
+                ", emailDestinatario='" + emailDestinatario + '\'' +
+                '}';
     }
 }

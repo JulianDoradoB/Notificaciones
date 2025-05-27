@@ -1,7 +1,7 @@
 package com.example.notificaciones.infraestructure.entity;
 
 import jakarta.persistence.*;
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "notificaciones")
@@ -24,7 +24,7 @@ public class Notificacion {
     private String mensaje;
 
     @Column(name = "fecha_envio", nullable = false, updatable = false)
-    private Timestamp fechaEnvio;
+    private LocalDateTime fechaEnvio;
 
     @Column(nullable = false)
     private String estado;
@@ -39,7 +39,7 @@ public class Notificacion {
     private String detallesAdicionales;
 
     public Notificacion() {
-        this.fechaEnvio = new Timestamp(System.currentTimeMillis());
+        this.fechaEnvio = LocalDateTime.now();
     }
 
     public Notificacion(Long clienteId, String tipo, String asunto, String mensaje, String estado, String canal, String referenciaServicio, String detallesAdicionales) {
@@ -47,14 +47,15 @@ public class Notificacion {
         this.tipo = tipo;
         this.asunto = asunto;
         this.mensaje = mensaje;
-        this.fechaEnvio = new Timestamp(System.currentTimeMillis());
+        this.fechaEnvio = LocalDateTime.now();
         this.estado = estado;
         this.canal = canal;
         this.referenciaServicio = referenciaServicio;
         this.detallesAdicionales = detallesAdicionales;
     }
 
-    // Getters y setters
+    // Getters y Setters...
+
     public Long getId() {
         return id;
     }
@@ -95,11 +96,11 @@ public class Notificacion {
         this.mensaje = mensaje;
     }
 
-    public Timestamp getFechaEnvio() {
+    public LocalDateTime getFechaEnvio() {
         return fechaEnvio;
     }
 
-    public void setFechaEnvio(Timestamp fechaEnvio) {
+    public void setFechaEnvio(LocalDateTime fechaEnvio) {
         this.fechaEnvio = fechaEnvio;
     }
 

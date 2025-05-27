@@ -5,7 +5,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-@FeignClient(name = "pagos-client", url = "http://localhost:8092") // Cambia puerto si es otro
+@FeignClient(name = "pagos-client", url = "http://localhost:8092")
 public interface PagoClient {
 
     @GetMapping("/pagos/{id}")

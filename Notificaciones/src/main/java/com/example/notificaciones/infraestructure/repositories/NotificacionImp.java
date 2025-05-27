@@ -72,7 +72,7 @@ public class NotificacionImp implements INotificacion {
         return notificacionRepository.save(notificacion);
     }
 
-    // >>>>> AÑADE ESTA IMPLEMENTACIÓN <<<<<
+    
     @Override
     public List<Notificacion> saveAllEntities(List<Notificacion> notificaciones) {
         return notificacionRepository.saveAll(notificaciones);
