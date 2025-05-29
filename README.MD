@@ -1,48 +1,61 @@
-📬 Notifications Microservice
-This microservice is a core component of a modular clinical management system. Its primary function is to manage and dispatch notifications for critical events such as payment confirmations and medical appointment reminders.
+📬 Microservicio de Notificaciones
+Este microservicio es un componente central de un sistema modular de gestión clínica. Su función principal es gestionar y enviar notificaciones para eventos críticos como confirmaciones de pago y recordatorios de citas médicas.
 
-🛠️ Technologies Used
-This project leverages a modern tech stack to ensure robustness, scalability, and ease of deployment:
+🛠️ Tecnologías Utilizadas
+Este proyecto utiliza un stack tecnológico moderno para garantizar robustez, escalabilidad y facilidad de despliegue:
 
-Java 22: The latest LTS version of Java for robust backend development.
-Spring Boot: Simplifies the development of production-ready, stand-alone Spring applications.
-Maven: Dependency management and build automation tool.
-Feign Client: A declarative web service client for seamless communication with other microservices.
-Docker: For containerization, ensuring consistent environments across development and deployment.
-Railway: A modern platform for effortless application deployment.
+Java 22: La versión LTS más reciente de Java para un desarrollo backend robusto.
 
-🚀 Getting Started
-Follow these instructions to get your Notifications Microservice up and running.
+Spring Boot: Facilita el desarrollo de aplicaciones Spring listas para producción.
 
-🔧 Prerequisites
-Before you begin, ensure you have the following installed:
+Maven: Herramienta para gestión de dependencias y automatización de builds.
+
+Feign Client: Cliente web declarativo para comunicación fluida con otros microservicios.
+
+Docker: Para la contenerización, garantizando entornos consistentes en desarrollo y despliegue.
+
+Railway: Plataforma moderna para desplegar aplicaciones sin complicaciones.
+
+🚀 Primeros Pasos
+Sigue estas instrucciones para poner en marcha el Microservicio de Notificaciones.
+
+🔧 Requisitos Previos
+Antes de comenzar, asegúrate de tener instalados:
 
 Java 22
+
 Maven
-Docker (Optional, if deploying locally without containers)
-An account on Railway.app (for cloud deployment)
-▶️ Local Execution
-To run the microservice directly on your local machine:
 
-Build the project:
-Bash
+Docker (opcional, si vas a desplegar localmente sin contenedores)
 
+Una cuenta en Railway.app (para despliegue en la nube)
+
+▶️ Ejecución Local
+Para ejecutar el microservicio directamente en tu máquina local:
+
+Compila el proyecto:
+
+bash
+Copiar
+Editar
 ./mvnw clean install -DskipTests
-Run the application:
-Bash
+Ejecuta la aplicación:
 
+bash
+Copiar
+Editar
 java -jar target/*.jar
-The application will start on http://localhost:8080.
+La aplicación estará disponible en: http://localhost:8080
 
-🐳 Docker
-A Dockerfile is included for containerizing the application, providing a consistent and isolated environment.
+🐳 Uso de Docker
+Se incluye un Dockerfile para contenerizar la aplicación, proporcionando un entorno aislado y consistente.
 
 Dockerfile:
 
-Dockerfile
-
+dockerfile
+Copiar
+Editar
 FROM eclipse-temurin:22-jdk AS build
-
 WORKDIR /app
 COPY . .
 RUN chmod +x ./mvnw && ./mvnw clean package -DskipTests
@@ -50,51 +63,66 @@ RUN chmod +x ./mvnw && ./mvnw clean package -DskipTests
 FROM eclipse-temurin:22-jdk
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
-
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
-Building and Running with Docker:
+Construcción y Ejecución con Docker:
 
-Build the Docker image:
-Bash
-
+bash
+Copiar
+Editar
 docker build -t notificaciones-app .
-Run the Docker container:
-Bash
-
 docker run -p 8080:8080 notificaciones-app
-The application will be accessible at http://localhost:8080.
+La aplicación estará disponible en: http://localhost:8080
 
-☁️ Deployment on Railway
-Railway offers a streamlined deployment process for your microservice:
+☁️ Despliegue en Railway
+Railway ofrece un proceso simplificado para desplegar tu microservicio:
 
-Upload your project to GitHub: Ensure your project is pushed to a public or private GitHub repository.
-Navigate to Railway.app: Log in to your account.
-Create a New Project: Select the option to "Deploy from GitHub Repo."
-Connect your repository: Railway will automatically detect the Dockerfile in your repository.
-Verify Project Structure: Crucially, ensure that the Dockerfile and pom.xml are located directly in the root of your GitHub repository (e.g., your-repo/Dockerfile, your-repo/pom.xml), not within a subfolder.
+Sube tu proyecto a GitHub: Asegúrate de que el repositorio sea público o privado.
 
-📬 Expected Endpoints
-This microservice primarily acts as a consumer of events from other services like "Pagos" (Payments) and "Citas" (Appointments). It then processes and dispatches relevant notifications.
+Accede a Railway.app e inicia sesión.
 
-The specific endpoints for this service are defined within the controller package, but here are common examples:
+Crea un nuevo proyecto seleccionando la opción "Deploy from GitHub Repo".
 
-POST /notificaciones: Sends a new notification.
-GET /notificaciones: Retrieves a list of all notifications.
-GET /notificaciones/{id}: Fetches details for a specific notification by its ID.
+Conecta tu repositorio: Railway detectará automáticamente el Dockerfile.
 
-🔗 Integration with Other Microservices
-This service is designed to integrate seamlessly with other components of the clinical management system, specifically:
+Verifica la estructura del proyecto:
 
-Microservicio de Pagos (Payments Microservice)
-Microservicio de Citas (Appointments Microservice)
-These integrations are facilitated using FeignClient, with client interfaces defined in the infrastructure.client package.
+Asegúrate de que tanto Dockerfile como pom.xml estén en la raíz del repositorio:
 
-❓ Common Issues & Troubleshooting
-Encountering problems? Here are solutions to frequently faced issues:
+✅ tu-repo/Dockerfile
 
-"Application failed to respond" on Railway:
-Project Root: Verify that your project's main content (including Dockerfile and pom.xml) is at the root of your GitHub repository. Railway does not support subdirectories like Notificaciones/Notificaciones/.
-Java 22 Configuration: Double-check that your Dockerfile and Railway environment variables are correctly configured for Java 22.
+✅ tu-repo/pom.xml
+
+❌ tu-repo/Notificaciones/Dockerfile
+
+📬 Endpoints Esperados
+Este microservicio actúa principalmente como consumidor de eventos de otros servicios como Pagos y Citas, y luego procesa y envía las notificaciones correspondientes.
+
+Ejemplos comunes de endpoints:
+
+POST /notificaciones: Envía una nueva notificación.
+
+GET /notificaciones: Recupera una lista de todas las notificaciones.
+
+GET /notificaciones/{id}: Obtiene detalles de una notificación específica por su ID.
+
+🔗 Integración con Otros Microservicios
+Este servicio se integra fácilmente con otros componentes del sistema de gestión clínica, específicamente con:
+
+Microservicio de Pagos
+
+Microservicio de Citas
+
+Estas integraciones se realizan utilizando FeignClient, con interfaces cliente definidas en el paquete infrastructure.client.
+
+❓ Problemas Comunes y Soluciones
+"Application failed to respond" en Railway:
+
+Estructura del Proyecto: Verifica que Dockerfile y pom.xml estén en la raíz del repositorio.
+
+Configuración de Java 22: Asegúrate de que el Dockerfile y las variables de entorno estén configuradas correctamente.
+
 "Could not determine how to build":
-This usually indicates that Railway cannot find the necessary build files (like pom.xml or Dockerfile) in the expected location. Move all relevant project content to the root directory of your repository.
+
+Railway no puede encontrar los archivos necesarios (pom.xml, Dockerfile) en la ubicación esperada.
+➤ Solución: Mueve todos los archivos del proyecto directamente a la raíz del repositorio.
