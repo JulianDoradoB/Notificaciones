@@ -5,13 +5,15 @@ import com.example.notificaciones.domain.repository.INotificacion;
 import com.example.notificaciones.infraestructure.entity.Notificacion;
 import com.example.notificaciones.infraestructure.mapper.NotificacionMapper;
 import com.example.notificaciones.infraestructure.CitaClient;
-import feign.FeignException; // Importar FeignException
+import com.example.notificaciones.infraestructure.PagoClient; // Importar PagoClient
+import com.example.notificaciones.infraestructure.dto.PagoDTO; // Importar PagoDTO del lado de Notificaciones
+import feign.FeignException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime; // Asegúrate de importar LocalDateTime
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -25,15 +27,18 @@ public class NotificacionService {
     private final NotificacionMapper notificacionMapper;
     private final EmailService emailService;
     private final CitaClient citaClient;
+    private final PagoClient pagoClient; // Inyectar PagoClient
 
     public NotificacionService(INotificacion notificacionRepo,
                                NotificacionMapper notificacionMapper,
                                EmailService emailService,
-                               CitaClient citaClient) {
+                               CitaClient citaClient,
+                               PagoClient pagoClient) { // Añadir PagoClient al constructor
         this.notificacionRepo = notificacionRepo;
         this.notificacionMapper = notificacionMapper;
         this.emailService = emailService;
         this.citaClient = citaClient;
+        this.pagoClient = pagoClient; // Inicializar PagoClient
     }
 
     public List<NotificacionDTO> getAll() {
@@ -83,9 +88,9 @@ public class NotificacionService {
             !"nodisponible@example.com".equals(dto.getEmailDestinatario())) { // No intentar enviar a default
             try {
                 boolean enviadoExitosamente = emailService.enviarCorreo(
-                        dto.getEmailDestinatario(),
-                        dto.getAsunto() != null ? dto.getAsunto() : "Nueva notificación",
-                        dto.getMensaje() != null ? dto.getMensaje() : ""
+                    dto.getEmailDestinatario(),
+                    dto.getAsunto() != null ? dto.getAsunto() : "Nueva notificación",
+                    dto.getMensaje() != null ? dto.getMensaje() : ""
                 );
                 if (enviadoExitosamente) {
                     estadoFinalNotificacion = "ENVIADA";
@@ -97,6 +102,32 @@ public class NotificacionService {
                         (savedNotificacion.getDetallesAdicionales() != null ? savedNotificacion.getDetallesAdicionales() + "; " : "") +
                         "Fallo al enviar correo por EmailService (retornó false)."
                     );
+
+                    // --- NUEVA LÓGICA: ACTUALIZAR ESTADO DE PAGO SI LA NOTIFICACIÓN FALLA ---
+                    if (dto.getReferenciaServicio() != null && dto.getReferenciaServicio().startsWith("PagoService:")) {
+                        try {
+                            Long pagoId = Long.parseLong(dto.getReferenciaServicio().split(":")[1]);
+                            // Obtener el DTO completo del pago actual para mantener sus otros campos
+                            PagoDTO pagoActual = pagoClient.obtenerPago(pagoId);
+                            if (pagoActual != null) {
+                                // Establecer un estado específico que indique que la notificación falló
+                                pagoActual.setEstado("NOTIFICACION_FALLIDA");
+                                // Llamar al Feign Client para actualizar el pago
+                                pagoClient.actualizarPago(pagoId, pagoActual);
+                                log.warn("🚨 Pago ID {} actualizado a NOTIFICACION_FALLIDA en PagosService debido a fallo de envío de correo.", pagoId);
+                            } else {
+                                log.warn("ADVERTENCIA (Notificaciones - Servicio): Pago con ID {} no encontrado al intentar actualizar su estado a NOTIFICACION_FALLIDA.", pagoId);
+                            }
+                        } catch (NumberFormatException nfe) {
+                            log.error("❌ ERROR (Notificaciones - Servicio): ID de pago no numérico en referenciaServicio: {}. Error: {}", dto.getReferenciaServicio(), nfe.getMessage());
+                        } catch (FeignException fe) {
+                            log.error("❌ ERROR (Notificaciones - Servicio): Feign al actualizar pago ID {} a NOTIFICACION_FALLIDA: HTTP Status {} - {}", dto.getReferenciaServicio(), fe.status(), fe.getMessage());
+                        } catch (Exception ex) {
+                            log.error("❌ ERROR (Notificaciones - Servicio): Error inesperado al actualizar pago ID {} a NOTIFICACION_FALLIDA: {}", dto.getReferenciaServicio(), ex.getMessage(), ex);
+                        }
+                    }
+                    // --- FIN NUEVA LÓGICA ---
+
                 }
             } catch (Exception e) {
                 estadoFinalNotificacion = "FALLIDA";
@@ -105,6 +136,22 @@ public class NotificacionService {
                     (savedNotificacion.getDetallesAdicionales() != null ? savedNotificacion.getDetallesAdicionales() + "; " : "") +
                     "Excepción durante el envío del correo: " + e.getMessage()
                 );
+
+                // --- NUEVA LÓGICA: ACTUALIZAR ESTADO DE PAGO SI HAY EXCEPCIÓN AL ENVIAR CORREO ---
+                if (dto.getReferenciaServicio() != null && dto.getReferenciaServicio().startsWith("PagoService:")) {
+                    try {
+                        Long pagoId = Long.parseLong(dto.getReferenciaServicio().split(":")[1]);
+                        PagoDTO pagoActual = pagoClient.obtenerPago(pagoId);
+                        if (pagoActual != null) {
+                            pagoActual.setEstado("NOTIFICACION_FALLIDA_EXCEPCION"); // Un estado diferente para indicar excepción
+                            pagoClient.actualizarPago(pagoId, pagoActual);
+                            log.warn("🚨 Pago ID {} actualizado a NOTIFICACION_FALLIDA_EXCEPCION en PagosService debido a excepción en envío de correo.", pagoId);
+                        }
+                    } catch (Exception updateEx) {
+                        log.error("❌ Error al intentar actualizar estado de pago ID {} en Notificaciones debido a excepción de correo: {}", dto.getReferenciaServicio(), updateEx.getMessage());
+                    }
+                }
+                // --- FIN NUEVA LÓGICA ---
             }
         } else {
             log.info("La notificación {} no es de tipo EMAIL, no tiene destinatario o usa un destinatario por defecto. No se intentó enviar correo.", savedNotificacion.getId());
@@ -189,7 +236,6 @@ public class NotificacionService {
         return results;
     }
 
-    // ... (Método delete, etc. - ya lo tenías bien)
     public boolean delete(Long id) {
         try {
             notificacionRepo.delete(id); // Asumiendo que `delete` en INotificacion toma el ID
